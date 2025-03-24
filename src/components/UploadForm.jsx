@@ -1,52 +1,29 @@
 // src/components/UploadForm.jsx
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAnalysis } from "../context/AnalysisContext";
 
 const UploadForm = () => {
   const navigate = useNavigate();
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const { setAudioFile, setEmotionData, setDiarizationData, setSentimentData, setFinalReportData } = useAnalysis();
   const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      validateFile(e.dataTransfer.files[0]);
-    }
-  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      validateFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      // Set the audio file in global context and clear previous analysis data.
+      setAudioFile(file);
+      setEmotionData(null);
+      setDiarizationData(null);
+      setSentimentData(null);
+      setFinalReportData(null);
     }
   };
 
-  // Check if file is an audio type
-  const validateFile = (file) => {
-    const allowedTypes = ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp3", "audio/x-m4a", "audio/m4a"];
-    if (!allowedTypes.includes(file.type)) {
-      setErrorMessage("Please select a valid audio file (MP3, WAV, M4A).");
-      setSelectedFile(null);
-      return;
-    }
-    setErrorMessage("");
-    setSelectedFile(file);
-  };
-
-  // Mock upload logic
-  const handleFileUpload = () => {
+  const handleUpload = () => {
     if (!selectedFile) return;
     let progress = 0;
     const interval = setInterval(() => {
@@ -54,21 +31,16 @@ const UploadForm = () => {
       setUploadProgress(progress);
       if (progress >= 100) {
         clearInterval(interval);
-        // Navigate to Speech Emotion Analysis page and pass the file
-        navigate("/analysis", { state: { file: selectedFile } });
+        // After upload, navigate to the Speech Emotion page.
+        navigate("/analysis");
       }
     }, 200);
   };
 
   return (
     <div className="w-full">
-      {/* Drag-and-Drop Box */}
       <div
-        className={`border-2 border-dashed rounded-md p-8 flex flex-col items-center justify-center transition-colors 
-          ${isDragging ? "border-blue-400 bg-blue-50" : "border-gray-300"}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        className="border-2 border-dashed rounded-md p-8 flex flex-col items-center justify-center transition-colors border-gray-300"
       >
         <h3 className="text-lg font-medium mb-2">Upload your audio file</h3>
         <p className="text-gray-500 mb-4 text-sm">
@@ -83,11 +55,10 @@ const UploadForm = () => {
         <input
           id="audio-upload"
           type="file"
-          accept="audio/mp3,audio/wav,audio/m4a"
+          accept="audio/*"
           onChange={handleFileChange}
           className="hidden"
         />
-
         {selectedFile && (
           <p className="mt-4 text-sm text-gray-600">
             Selected File: {selectedFile.name}
@@ -97,16 +68,10 @@ const UploadForm = () => {
           <p className="mt-4 text-sm text-red-500">{errorMessage}</p>
         )}
       </div>
-
-      {/* Supported Formats */}
-      <p className="text-sm text-gray-500 mt-2">
-        Supported formats: MP3, WAV, M4A
-      </p>
-
-      {/* Upload Button & Progress Bar */}
+      <p className="text-sm text-gray-500 mt-2">Supported formats: MP3, WAV, M4A</p>
       <div className="mt-6">
         <button
-          onClick={handleFileUpload}
+          onClick={handleUpload}
           disabled={!selectedFile}
           className={`${
             selectedFile
@@ -116,8 +81,6 @@ const UploadForm = () => {
         >
           Upload
         </button>
-
-        {/* Progress Bar */}
         {uploadProgress > 0 && (
           <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
             <div

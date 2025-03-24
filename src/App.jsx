@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+// src/App.jsx
+import React from "react";
+import { AnalysisProvider } from "./context/AnalysisContext";
 import Navbar from "./layout/Navbar";
 import AppRoutes from "./routes/AppRoutes";
 
-
 const App = () => {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
-      <AppRoutes  />
-    </div>
+    <AnalysisProvider>
+     
+      <AppRoutes />
+    </AnalysisProvider>
   );
 };
 
